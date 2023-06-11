@@ -1,3 +1,0 @@
-openai
-azure-functions
-requests
