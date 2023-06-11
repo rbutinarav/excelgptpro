@@ -1,35 +1,25 @@
-# excelgptpro
+# ExcelGPTPro
 
-## Overview
+**ExcelGPTPro** is an ambitious project aimed at integrating OpenAI's powerful GPT models directly into Excel. This allows users to perform complex tasks such as translating, summarizing, and extracting information from text, as well as generating new text and analyzing datasets (both numeric and textual) within their Excel environment.
 
-Welcome to the initial, early-stage release of excelgptpro! This Excel add-in aims to bring the power of OpenAI to your spreadsheets. Currently, excelgptpro is under active development and is in a very early stage. This means that while it's functional, it's expected to have bugs and may not have all features implemented yet.
+Efficient use of resources is a key focus of this project. We use a local caching system to minimize unnecessary calls to the OpenAI service, reducing costs and maintaining optimal performance and speed in the user's workflow.
 
-The purpose of excelgptpro is to streamline your workload, offering sophisticated AI capabilities directly within Excel, and potentially saving you time and effort on various tasks.
+## Project Status
 
-## Current Features
+This project is currently in its initial stage of development. We have completed our first draft of the standalone VBA version, which is now available for use. Contributions and feedback are highly welcomed and appreciated.
 
-In its current early development stage, excelgptpro introduces initial support for the following features:
+## Project Versions
 
-- **Translate Text:** Translate text between languages directly within Excel. (In progress)
-- **Extract Text:** Use AI to extract relevant information from your textual data. (Coming soon)
-- **Summarize Text:** Convert lengthy paragraphs into concise summaries. (Coming soon)
+We have released the following modules and plan further developments:
 
-We are actively working on these features and expect improvements and more stability in the coming releases.
+1. **Standalone VBA Version (Now Available)**: This is a standalone module that any user with access to OpenAI GPT service will be able to use. OpenAI secrets will be provided by the user and stored locally. To use this version, please navigate to the `vba` folder and read the README.md for specific instructions. This version comes with examples and, while in its first draft, is fully functional.
 
-## Future Releases
+We continue to plan for the following releases:
 
-We're constantly working to improve and expand excelgptpro. Planned features for future releases include:
+2. **Standalone TypeScript Version**: The second phase of the project will produce a TypeScript version of the module. Like the VBA version, this version will also be completely standalone and users will be able to run it locally. More details will be provided as development progresses.
 
-- **Formula Suggestions:** Get AI-driven suggestions to solve both simple and complex Excel formulas. This feature is currently in the design phase and we hope to start development soon.
+3. **Managed Version**: The third phase will introduce a backend engine that allows users to register and store their credentials remotely. This version will be managed by an Azure Function and will offer both VBA and TypeScript front ends. More details will be provided as development progresses.
 
 ## Getting Started
 
-As the project is still in early development, we have not yet published the add-in to the Excel Add-in Store. Please feel free to clone this repository, check out the code, and contribute!
-
-## Feedback and Contributions
-
-At this early stage, your feedback is invaluable. Please don't hesitate to submit bug reports and feature requests via GitHub Issues. We welcome all contributions to help improve this project, whether through identifying bugs, suggesting features, or contributing code.
-
-Remember, this project is in the early stages of development, so please bear with us as we work to develop this into a full-featured and stable Excel add-in. We appreciate your interest and patience.
-
-Happy Excelling!
+The standalone VBA version is currently available. To get started with it, navigate to the `vba` folder and follow the instructions in the README.md file. It includes examples to help you understand its functionality and usage.
