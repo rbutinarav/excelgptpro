@@ -1,0 +1,14 @@
+.env
+local.settings.json
+__pycache__/
+*.py[cod]
+.vscode
+test
+
+# Azure Functions local settings file
+local.settings.json
+.python_packages
+.venv
+
+#Excel plugin
+Copilot4Excel
