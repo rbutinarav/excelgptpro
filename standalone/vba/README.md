@@ -5,7 +5,8 @@ Welcome to ExcelGPTPro - VBA Standalone version! This repository contains a VBA 
 ## Instructions
 
 1. Open Excel and navigate to the VBA editor (shortcut Alt + F11).
-2. Go to `File > Import File...` and select the .bas file you downloaded from this repository. [not currently available]
+2. Go to `File > Import File...` and select the .bas file you downloaded from this repository.
+
    * Alternatively, create a new module and copy the following code into the editor.
 
 ## VBA Module
