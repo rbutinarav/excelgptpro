@@ -1,3 +1,4 @@
-.vscode #files added by vscode
-.managed
+.vscode
+managed
 standalone/typescript
+standalone/vba/examples_local
