@@ -73,7 +73,7 @@ Public Function OpenAI(prompt As String, Optional engine As String, Optional tem
     Do While Left(response_text, 4) = "\n\n"
     response_text = Mid(response_text, 5)
     Loop
-    
+    response_text = Replace(response_text, "\n", vbCrLf)
     OpenAI = response_text
 End Function
 

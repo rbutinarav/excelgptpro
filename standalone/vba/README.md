@@ -96,6 +96,8 @@ Public Function OpenAI(prompt As String, Optional engine As String, Optional tem
     response_text = Mid(response_text, 5)
     Loop
     
+    response_text = Replace(response_text, "\n", vbCrLf)
+    
     ' Return the cleaned response text
     OpenAI = response_text
 End Function
