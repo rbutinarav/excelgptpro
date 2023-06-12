@@ -29,9 +29,9 @@ We continue to plan for the following releases:
 The standalone VBA version is currently available. To get started with it, navigate to the `vba` folder and follow the instructions in the README.md file. It includes examples to help you understand its functionality and usage.
 
 ![Screenshot of ExcelGPTPro](./screenshots/helloworld_1.png)
-*This is a screenshot of the ExcelGPTPro interface.*
+*Screenshot showing the first page of the Helloworld example file.*
 
 ![Screenshot of ExcelGPTPro](./screenshots/helloworld_2.png)
-*This is a screenshot of the ExcelGPTPro interface.*
+*Details of the OpenAI function and the available parameters*
 
 
