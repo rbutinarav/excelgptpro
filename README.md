@@ -1,12 +1,16 @@
 # ExcelGPTPro
 
-**ExcelGPTPro** is an ambitious project aimed at integrating OpenAI's powerful GPT models directly into Excel. This allows users to perform complex tasks such as translating, summarizing, and extracting information from text, as well as generating new text and analyzing datasets (both numeric and textual) within their Excel environment.
+**ExcelGPTPro** is a project aimed at integrating OpenAI's GPT models directly into Excel. This allows users to perform complex tasks such as translating, summarizing, and extracting information from text, as well as generating new text and analyzing datasets (both numeric and textual) within their Excel environment.
 
 Efficient use of resources is a key focus of this project. We use a local caching system to minimize unnecessary calls to the OpenAI service, reducing costs and maintaining optimal performance and speed in the user's workflow.
 
 ## Project Status
 
 This project is currently in its initial stage of development. We have completed our first draft of the standalone VBA version, which is now available for use. Contributions and feedback are highly welcomed and appreciated.
+
+## Demonstration Video
+
+See ExcelGPTPro in action in this [demonstration video](https://www.veed.io/view/f1c63389-762b-4f8f-babb-ebe7988e62d4?panel=share).
 
 ## Project Versions
 
@@ -23,3 +27,11 @@ We continue to plan for the following releases:
 ## Getting Started
 
 The standalone VBA version is currently available. To get started with it, navigate to the `vba` folder and follow the instructions in the README.md file. It includes examples to help you understand its functionality and usage.
+
+![Screenshot of ExcelGPTPro](./screenshots/helloworld_1.png)
+*This is a screenshot of the ExcelGPTPro interface.*
+
+![Screenshot of ExcelGPTPro](./screenshots/helloworld_2.png)
+*This is a screenshot of the ExcelGPTPro interface.*
+
+

@@ -15,6 +15,37 @@ Public Function GetSetupValue(parameterName As String) As String
     GetSetupValue = ""
 End Function
 
+Function TrimNewlines(s As String) As String
+    While Left(s, 2) = vbCrLf
+        s = Mid(s, 3)
+    Wend
+
+    While Right(s, 2) = vbCrLf
+        s = Left(s, Len(s) - 2)
+    Wend
+
+    TrimNewlines = s
+End Function
+
+
+Function ReplaceMultipleNewlines(s As String) As String
+    ' Replace multiple newlines with a single newline
+    Do While InStr(s, vbCrLf & vbCrLf) > 0
+        s = Replace(s, vbCrLf & vbCrLf, vbCrLf)
+    Loop
+
+    ' Trim leading and trailing newlines or whitespaces
+    Do While Left(s, 2) = vbCrLf Or Left(s, 1) = " " Or Left(s, 1) = Chr(9)
+        s = Mid(s, IIf(Left(s, 2) = vbCrLf, 3, 2))
+    Loop
+
+    Do While Right(s, 2) = vbCrLf Or Right(s, 1) = " " Or Right(s, 1) = Chr(9)
+        s = Left(s, Len(s) - IIf(Right(s, 2) = vbCrLf, 2, 1))
+    Loop
+
+    ReplaceMultipleNewlines2 = s
+End Function
+
 Function JsonEscape(s As String) As String
     s = Replace(s, "\", "\\")
     s = Replace(s, """", "\""")
@@ -52,7 +83,8 @@ Public Function OpenAI(prompt As String, Optional engine As String, Optional tem
     
     ' Construct the data to send in the request
     Dim data As String
-    data = "{""prompt"": """ & JsonEscape(prompt) & """, ""max_tokens"": " & max_tokens & ", ""temperature"": " & temperature & "}"
+    prompt = JsonEscape(prompt)
+    data = "{""prompt"": """ & prompt & """, ""max_tokens"": " & max_tokens & ", ""temperature"": " & temperature & "}"
     
     xmlhttp.send (data)
     
@@ -63,17 +95,15 @@ Public Function OpenAI(prompt As String, Optional engine As String, Optional tem
     ' Extract the text from the response
     Dim startPos As Integer: startPos = InStr(response, "text"":""") + 7
     
-    Dim endPos As Integer: endPos = InStr(startPos, response, """,""index") - 2
+    Dim endPos As Integer: endPos = InStr(startPos, response, """,""index") - 1
     Dim response_text As String: response_text = Mid(response, startPos, endPos - startPos + 1)
     
-    ' Remove leading and trailing white spaces and new lines
-    response_text = Trim(response_text)
-    response_text = Replace(response_text, vbNewLine, "")
-    
-    Do While Left(response_text, 4) = "\n\n"
-    response_text = Mid(response_text, 5)
-    Loop
+    ' Convert JSON newlines to VBA newlines
+    response_text = Replace(response_text, "\r\n", vbCrLf)
     response_text = Replace(response_text, "\n", vbCrLf)
+
+    response_text = ReplaceMultipleNewlines(response_text)
+    
     OpenAI = response_text
 End Function
 
