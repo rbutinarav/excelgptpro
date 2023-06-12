@@ -43,7 +43,7 @@ Function ReplaceMultipleNewlines(s As String) As String
         s = Left(s, Len(s) - IIf(Right(s, 2) = vbCrLf, 2, 1))
     Loop
 
-    ReplaceMultipleNewlines2 = s
+    ReplaceMultipleNewlines = s
 End Function
 
 Function JsonEscape(s As String) As String
@@ -65,45 +65,80 @@ Public Function OpenAI(prompt As String, Optional engine As String, Optional tem
     If temperature = "" Then temperature = CDbl(GetSetupValue("DEFAULT_TEMPERATURE"))
     If max_tokens = "" Then max_tokens = CInt(GetSetupValue("DEFAULT_MAX_TOKENS"))
 
-    Dim api_key As String: api_key = GetSetupValue("AZURE_OPENAI_KEY")
-    Dim api_version As String: api_version = GetSetupValue("AZURE_API_VERSION")
-    Dim api_endpoint As String: api_endpoint = GetSetupValue("AZURE_OPENAI_ENDPOINT")
+    Dim api_key As String
+    Dim api_version As String
+    Dim api_endpoint As String
+    Dim api_type As String: api_type = GetSetupValue("API_TYPE")
+
+    ' Check which API to use and set the key, version and endpoint accordingly
+    If api_type = "Azure" Then
+        api_key = GetSetupValue("AZURE_OPENAI_KEY")
+        api_version = GetSetupValue("AZURE_API_VERSION")
+        api_endpoint = GetSetupValue("AZURE_OPENAI_ENDPOINT")
+    ElseIf api_type = "OpenAI" Then
+        api_key = GetSetupValue("OPENAI_KEY")
+        api_version = "" ' OpenAI does not use a version parameter
+        api_endpoint = "https://api.openai.com/v1/engines/" & engine & "/completions"
+    Else
+        ' Invalid API type
+        OpenAI_dev = "Invalid API type"
+        Exit Function
+    End If
 
     ' Prepare the API request
     Dim xmlhttp As Object
     Set xmlhttp = CreateObject("MSXML2.ServerXMLHTTP")
-    
+
     ' Construct the URL for the request
     Dim url As String
-    url = api_endpoint & "/openai/deployments/" & engine & "/completions?api-version=" & api_version
+    If api_type = "Azure" Then
+        url = api_endpoint & "/openai/deployments/" & engine & "/completions?api-version=" & api_version
+    ElseIf api_type = "OpenAI" Then
+        url = api_endpoint
+    End If
 
     xmlhttp.Open "POST", url, False
     xmlhttp.setRequestHeader "Content-Type", "application/json"
-    xmlhttp.setRequestHeader "api-key", api_key
-    
+
+    ' Set the API key in the headers
+    If api_type = "Azure" Then
+        xmlhttp.setRequestHeader "api-key", api_key
+    ElseIf api_type = "OpenAI" Then
+        xmlhttp.setRequestHeader "Authorization", "Bearer " & api_key
+    End If
+
     ' Construct the data to send in the request
     Dim data As String
     prompt = JsonEscape(prompt)
     data = "{""prompt"": """ & prompt & """, ""max_tokens"": " & max_tokens & ", ""temperature"": " & temperature & "}"
-    
+
     xmlhttp.send (data)
-    
+
     ' Parse the response
     Dim response As String
     response = xmlhttp.responseText
-    
+
     ' Extract the text from the response
-    Dim startPos As Integer: startPos = InStr(response, "text"":""") + 7
-    
-    Dim endPos As Integer: endPos = InStr(startPos, response, """,""index") - 1
-    Dim response_text As String: response_text = Mid(response, startPos, endPos - startPos + 1)
-    
+    Dim startPos As Integer
+    Dim endPos As Integer
+    Dim response_text As String
+    If api_type = "Azure" Then
+        startPos = InStr(response, "text"":""") + 7
+        endPos = InStr(startPos, response, """,""index") - 1
+        response_text = Mid(response, startPos, endPos - startPos + 1)
+    ElseIf api_type = "OpenAI" Then
+        ' OpenAI's response structure might be different, adjust as needed
+        startPos = InStr(response, """text"": """) + 9
+        endPos = InStr(startPos, response, """") - 1
+        response_text = Mid(response, startPos, endPos - startPos + 1)
+    End If
+
     ' Convert JSON newlines to VBA newlines
     response_text = Replace(response_text, "\r\n", vbCrLf)
     response_text = Replace(response_text, "\n", vbCrLf)
 
     response_text = ReplaceMultipleNewlines(response_text)
-    
+
     OpenAI = response_text
 End Function
 
