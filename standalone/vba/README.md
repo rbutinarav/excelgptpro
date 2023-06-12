@@ -9,6 +9,8 @@ Welcome to ExcelGPTPro - VBA Standalone version! This repository contains a VBA 
 
 Alternatively, you can also start from the excelgptpro_helloworld_nosecrets.xlsm example file. This file contains the module and sample worksheet that showcases the functionality of the module.
 
+## Screenshots (from the helloworld example file)
+
 ![Screenshot of ExcelGPTPro](../../screenshots/helloworld_1.png)
 
 *Screenshot showing the first page of the Helloworld example file.*
