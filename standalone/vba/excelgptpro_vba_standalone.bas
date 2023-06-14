@@ -78,7 +78,12 @@ Public Function OpenAI(prompt As String, Optional engine As String, Optional tem
     ElseIf api_type = "OpenAI" Then
         api_key = GetSetupValue("OPENAI_KEY")
         api_version = "" ' OpenAI does not use a version parameter
-        api_endpoint = "https://api.openai.com/v1/engines/" & engine & "/completions"
+        If engine = "gpt-4" Or engine = "gpt-3.5-turbo" Or engine = "gpt-3.5-turbo-16k" Then
+            api_endpoint = "https://api.openai.com/v1/chat/completions"
+            
+        Else
+            api_endpoint = "https://api.openai.com/v1/engines/" & engine & "/completions"
+        End If
     Else
         ' Invalid API type
         OpenAI_dev = "Invalid API type"
@@ -110,7 +115,14 @@ Public Function OpenAI(prompt As String, Optional engine As String, Optional tem
     ' Construct the data to send in the request
     Dim data As String
     prompt = JsonEscape(prompt)
-    data = "{""prompt"": """ & prompt & """, ""max_tokens"": " & max_tokens & ", ""temperature"": " & temperature & "}"
+
+    If engine = "gpt-4" Or engine = "gpt-3.5-turbo" Or engine = "gpt-3.5-turbo-16k" Then
+        'For chat models, construct the payload according to chat models requirements
+        data = "{""model"": """ & engine & """, ""messages"": [{""role"": ""system"", ""content"": ""You are a helpful assistant.""},{""role"": ""user"", ""content"": """ & prompt & """}]}"
+    Else
+        'For completion models, construct the payload according to completion models requirements
+        data = "{""prompt"": """ & prompt & """, ""max_tokens"": " & max_tokens & ", ""temperature"": " & temperature & "}"
+    End If
 
     xmlhttp.send (data)
 
@@ -127,10 +139,17 @@ Public Function OpenAI(prompt As String, Optional engine As String, Optional tem
         endPos = InStr(startPos, response, """,""index") - 1
         response_text = Mid(response, startPos, endPos - startPos + 1)
     ElseIf api_type = "OpenAI" Then
-        ' OpenAI's response structure might be different, adjust as needed
-        startPos = InStr(response, """text"": """) + 9
-        endPos = InStr(startPos, response, """") - 1
-        response_text = Mid(response, startPos, endPos - startPos + 1)
+        If engine = "gpt-4" Or engine = "gpt-3.5-turbo" Or engine = "gpt-3.5-turbo-16k" Then
+            'OpenAI's chat models response structure might be different, adjust as needed
+            startPos = InStr(response, """content"": """) + 12
+            endPos = InStr(startPos, response, """") - 1
+            response_text = Mid(response, startPos, endPos - startPos + 1)
+        Else
+            'OpenAI's completion models response structure might be different, adjust as needed
+            startPos = InStr(response, """text"": """) + 9
+            endPos = InStr(startPos, response, """") - 1
+            response_text = Mid(response, startPos, endPos - startPos + 1)
+        End If
     End If
 
     ' Convert JSON newlines to VBA newlines
@@ -141,8 +160,6 @@ Public Function OpenAI(prompt As String, Optional engine As String, Optional tem
 
     OpenAI = response_text
 End Function
-
-
 
 
 Public Function RangeToJSON(rng As Range) As String
