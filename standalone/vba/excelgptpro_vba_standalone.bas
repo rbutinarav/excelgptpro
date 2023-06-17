@@ -1,4 +1,3 @@
-Attribute VB_Name = "Module1"
 Public Function GetSetupValue(parameterName As String) As String
     Dim setupSheet As Worksheet
     Set setupSheet = ThisWorkbook.Sheets("Setup")
@@ -60,6 +59,7 @@ End Function
 
 
 Public Function OpenAI(prompt As String, Optional engine As String, Optional temperature As String, Optional max_tokens As String) As String
+    On Error GoTo ErrorHandler ' Add this line to enable error handling
     ' Get default parameters from the Setup sheet if not provided
     If engine = "" Then engine = GetSetupValue("DEFAULT_ENGINE")
     If temperature = "" Then temperature = CDbl(GetSetupValue("DEFAULT_TEMPERATURE"))
@@ -86,7 +86,7 @@ Public Function OpenAI(prompt As String, Optional engine As String, Optional tem
         End If
     Else
         ' Invalid API type
-        OpenAI_dev = "Invalid API type"
+        OpenAI = "Invalid API type"
         Exit Function
     End If
 
@@ -118,11 +118,12 @@ Public Function OpenAI(prompt As String, Optional engine As String, Optional tem
 
     If engine = "gpt-4" Or engine = "gpt-3.5-turbo" Or engine = "gpt-3.5-turbo-16k" Then
         'For chat models, construct the payload according to chat models requirements
-        data = "{""model"": """ & engine & """, ""messages"": [{""role"": ""system"", ""content"": ""You are a helpful assistant.""},{""role"": ""user"", ""content"": """ & prompt & """}]}"
+        data = "{""model"": """ & engine & """, ""max_tokens"": " & max_tokens & ", ""temperature"": " & temperature & ", ""messages"": [{""role"": ""system"", ""content"": ""You are a helpful assistant.""},{""role"": ""user"", ""content"": """ & prompt & """}]}"
     Else
         'For completion models, construct the payload according to completion models requirements
         data = "{""prompt"": """ & prompt & """, ""max_tokens"": " & max_tokens & ", ""temperature"": " & temperature & "}"
     End If
+
 
     xmlhttp.send (data)
 
@@ -159,22 +160,198 @@ Public Function OpenAI(prompt As String, Optional engine As String, Optional tem
     response_text = ReplaceMultipleNewlines(response_text)
 
     OpenAI = response_text
+    
+    Exit Function
+    
+ErrorHandler:
+    OpenAI = "OpenAI call error"
+    
 End Function
 
-
-Public Function RangeToJSON(rng As Range) As String
+Public Function MatrixRangeToJSON(tableRange As Range, entityHeadersRange As Range, entityName As String) As String
+    Dim row As Range
     Dim cell As Range
+    Dim i As Integer
+    Dim entityHeaders() As String
     Dim json As String
-    
-    json = "{"
-    For Each cell In rng
-        json = json & """" & cell.Value & """: """ & cell.Offset(0, 1).Value & ""","
+    Dim startEntityCol As Integer
+    Dim endEntityCol As Integer
+    Dim detailsCol As Integer
+
+    ' Get headers from the entityHeadersRange
+    ReDim entityHeaders(entityHeadersRange.Columns.Count - 1)
+    For Each cell In entityHeadersRange.Cells
+        entityHeaders(cell.Column - entityHeadersRange.Column) = cell.Value
     Next cell
-    json = Left(json, Len(json) - 1) ' Remove the trailing comma
-    json = json & "}"
-    
-    RangeToJSON = json
+
+    ' Start JSON array
+    json = "["
+
+    ' Define start and end of entity columns
+    startEntityCol = entityHeadersRange.Column - tableRange.Column + 1
+    endEntityCol = startEntityCol + entityHeadersRange.Columns.Count - 1
+
+    ' Define start of details columns
+    If startEntityCol = 1 Then
+        detailsCol = endEntityCol + 1
+    Else
+        detailsCol = 1
+    End If
+
+    ' Loop over each column (entity)
+    For i = 0 To UBound(entityHeaders)
+        ' Start a new JSON object for each entity
+        json = json & "{""" & entityName & """: {"
+
+        ' Add entity name
+        json = json & """Name"": """ & entityHeaders(i) & """, "
+
+        ' Add details from the same column
+        For Each row In tableRange.Offset(1, 0).Resize(tableRange.Rows.Count - 1).Rows
+            ' Add detail only if the cell is not empty
+            If Trim(row.Cells(1, startEntityCol + i).Value) <> "" Then
+                json = json & """" & tableRange.Cells(row.row, detailsCol).Value & """: """ & row.Cells(1, startEntityCol + i).Value & """, "
+            End If
+        Next row
+
+        ' Remove trailing comma and close the JSON object for the entity
+        json = Left(json, Len(json) - 2) & "}},"
+    Next i
+
+    ' Remove trailing comma and close the JSON array
+    json = Left(json, Len(json) - 1) & "]"
+
+    MatrixRangeToJSON = json
 End Function
+
+
+Public Function SimpleRangeToJSON(rng As Range, Optional hasHeaders As Boolean = False) As String
+    Dim row As Range
+    Dim cell As Range
+    Dim i As Integer
+    Dim headers() As String
+    Dim json As String
+
+    ' Get headers from the first row if they exist, else generate generic headers
+    ReDim headers(rng.Columns.Count - 1)
+    If hasHeaders Then
+        For Each cell In rng.Rows(1).Cells
+            headers(cell.Column - rng.Column) = cell.Value
+        Next cell
+    Else
+        For i = 0 To UBound(headers)
+            headers(i) = "Field" & (i + 1)
+        Next i
+    End If
+
+    ' Start JSON array
+    json = "["
+
+    ' Determine the start row based on whether or not there are headers
+    Dim startRow As Integer
+    If hasHeaders Then
+        startRow = 2
+    Else
+        startRow = 1
+    End If
+
+    ' Loop over each row
+    For Each row In rng.Offset(startRow - 1, 0).Resize(rng.Rows.Count - (startRow - 1)).Rows
+        ' Start a new JSON object
+        json = json & "{"
+
+        ' Add each cell in the row to the JSON object
+        For i = 0 To UBound(headers)
+            json = json & """" & headers(i) & """: """ & row.Cells(1, i + 1).Value & ""","
+        Next i
+
+        ' Remove trailing comma and close the JSON object
+        json = Left(json, Len(json) - 1) & "},"
+    Next row
+
+    ' Remove trailing comma and close the JSON array
+    json = Left(json, Len(json) - 1) & "]"
+
+    SimpleRangeToJSON = json
+End Function
+
+
+Public Function SimpleRangeToJSONL(rng As Range, Optional hasHeaders As Boolean = True) As String
+    Dim row As Range
+    Dim cell As Range
+    Dim i As Integer
+    Dim headers() As String
+    Dim json As String
+
+    ' Get headers from the first row if they exist, else generate generic headers
+    ReDim headers(rng.Columns.Count - 1)
+    If hasHeaders Then
+        For Each cell In rng.Rows(1).Cells
+            headers(cell.Column - rng.Column) = cell.Value
+        Next cell
+    Else
+        For i = 0 To UBound(headers)
+            headers(i) = "Field" & (i + 1)
+        Next i
+    End If
+
+    ' Start JSONL string
+    json = ""
+
+    ' Determine the start row based on whether or not there are headers
+    Dim startRow As Integer
+    If hasHeaders Then
+        startRow = 2
+    Else
+        startRow = 1
+    End If
+
+    ' Loop over each row
+    For Each row In rng.Offset(startRow - 1, 0).Resize(rng.Rows.Count - (startRow - 1)).Rows
+        ' Start a new JSON object
+        json = json & "{"
+
+        ' Add each cell in the row to the JSON object
+        For i = 0 To UBound(headers)
+            json = json & """" & headers(i) & """: """ & row.Cells(1, i + 1).Value & ""","
+        Next i
+
+        ' Remove trailing comma and close the JSON object, then add newline
+        json = Left(json, Len(json) - 1) & "}" & vbNewLine
+    Next row
+
+    ' Remove trailing newline
+    json = Left(json, Len(json) - 2)
+
+    SimpleRangeToJSONL = json
+End Function
+
+
+Public Function RangeToDelimitedText(rng As Range, Optional delimiter As String = "|", Optional replacement As String = "/") As String
+    Dim row As Range
+    Dim cell As Range
+    Dim txt As String
+    
+    ' Loop over each row
+    For Each row In rng.Rows
+        ' Loop over each cell in the row
+        For Each cell In row.Cells
+            ' Replace any instances of the delimiter in the cell's value with the replacement character
+            Dim cellValue As String
+            cellValue = Replace(cell.Value, delimiter, replacement)
+            ' Add the cell's value to the string, followed by the delimiter
+            txt = txt & cellValue & delimiter
+        Next cell
+        ' Replace the trailing delimiter with a newline character
+        txt = Left(txt, Len(txt) - Len(delimiter)) & vbNewLine
+    Next row
+
+    ' Remove the trailing newline character
+    txt = Left(txt, Len(txt) - 1)
+
+    RangeToDelimitedText = txt
+End Function
+
 
 Public Function TableRangeToJSON(rng As Range) As String
     Dim row As Range
@@ -211,4 +388,3 @@ Public Function TableRangeToJSON(rng As Range) As String
     
     TableRangeToJSON = json
 End Function
-
